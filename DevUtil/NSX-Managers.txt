@@ -1,0 +1,30 @@
+check admin, root and audit accounts
+
+Base Template DNS
+nsxmgr-01a, 192.168.110.42
+nsxmgr-02a, 192.168.110.43
+nsxc-01a, 192.168.110.31, NSX Controller
+nsxc-02a, 192.168.110.32, 2nd NSX Controller
+nsxc-03a, 192.168.110.33, 3rd NSX Controller
+vsm-01b ??, 192.168.210.42, NSX Manager
+vsm-02b ??, 192.168.210.43, 2nd NSX Manager
+nsxc-01b, 192.168.210.31, NSX controller
+nsxc-02b, 192.168.210.32, 2nd NSX controller
+nsxc-03b, 192.168.210.33, 3rd NSX controller
+
+2103 nsxmgr-01a, otherLinux64Guest, 192.168.110.42
+2113 nsxmgr-01a, ubuntu64Guest, 192.168.110.42
+2121 nsx-mgr, ubuntu64Guest, 192.168.110.30 - expires. Gregg fixing.
+2122 nsxmgr-01a, ubuntu64Guest, 192.168.110.42
+2122 nsxedge-01a, ubuntu64Guest, fe80:0:0:0:250:56ff:fe03:1632, fe80:0:0:0:250:56ff:fe03:1630, 192.168.110.100, fe80:0:0:0:250:56ff:fe03:1633
+2122 csm-01a, ubuntu64Guest, 192.168.110.30
+2126 nsx-mgr-01a, ubuntu64Guest, 192.168.110.42 - no expiration. Ok.
+2137 nsxmgr-01a, ubuntu64Guest, 192.168.110.42
+2137 nsxmgr-01b, ubuntu64Guest, 192.168.210.42
+2140 nsxmgr-01a, ubuntu64Guest, 192.168.110.42
+2181 nsxmgr-01a, ubuntu64Guest, 192.168.110.42
+2182 nsxmgr-01a, otherLinux64Guest, 192.168.110.42
+2182 nsxmgr-01b, ubuntu64Guest, 192.168.210.42
+2183 nsxmgr-01a, otherLinux64Guest, 192.168.110.42
+2185 nsxmgr-01a, otherLinux64Guest, 192.168.110.42
+2186 nsxmgr-01a, otherLinux64Guest, 192.168.110.42
