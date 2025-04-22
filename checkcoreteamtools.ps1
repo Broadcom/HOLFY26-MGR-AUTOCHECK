@@ -1,4 +1,4 @@
-# checkcoreteamtools.ps1 16-October 2024
+# checkcoreteamtools.ps1 22-April 2025
 
 # supported on Manager only
 # captains cannot change hol files in /home/holuser/hol
@@ -29,15 +29,15 @@ $result = ''
 Write-Output ("Checking Core Team files on the Manager and the Main Console...")
 
 $labStartup = "/home/holuser/hol/labstartup.py"
-$labStartupDate = "09 February 2024 12:00 AM"
+$labStartupDate = "15 April 2025 12:00 AM"
 $labStartupFunctions = "/home/holuser/hol/lsfunctions.py"
-$labStartupFunctionsDate = "03 March 2024 12:00 AM"
+$labStartupFunctionsDate = "07 April 2025 12:00 AM"
 
 #64 Main Console screen resolution = 1024 x 768
 Write-Output "Checking screen resolution..."
-# 2/5/2020 increasing default screen resolution to 1280 x 800
-$defaultScreenWidth = 1280
-$defaultScreenHeight= 800
+# 2/5/2020 increasing default screen resolution to 1440 x 900
+$defaultScreenWidth = 1440
+$defaultScreenHeight= 900
 
 $pass = $true
 If ( $WMC ) {
@@ -48,12 +48,11 @@ If ( $WMC ) {
 	If ( $output -Like "*${defaultScreenHeight}*" ) { $height = $defaultScreenHeight }
 	Remove-Item "$mcholroot/run.ps1"
 } ElseIf ( $LMC ) {
-	# determine display looking at ~holuser/.config/monitors.xml 
-	$monitors = "${mc}/home/holuser/.config/monitors.xml"
-	$cmd = "grep width $monitors | cut -f2 -d'>' | cut -f1 -d'<'"
-	$width = Invoke-Expression $cmd
-	$cmd = "grep height $monitors | cut -f2 -d'>' | cut -f1 -d'<'"
-	$height = Invoke-Expression $cmd
+        Copy-Item "$PSScriptRoot/getres.sh" -Destination "/lmchol/tmp/getres.sh"
+	$cmd = "/bin/bash /tmp/getres.sh"
+        $resolution = remoteLinuxCmdLMC console holuser $linuxpassword $cmd "-X"
+	($width, $heightraw)  = $resolution.Split("x")
+        $height = $heightraw.Trim()
 }
 If ( $width -ne $defaultScreenWidth -Or $height -ne $defaultScreenHeight) {  
 		$pass = $false
@@ -94,16 +93,10 @@ If ( $WMC ) {
 	$startup = "$mc/home/holuser/.config/autostart"
 	# verify the files exist 
 	$theFiles = ("$mc/home/holuser/.conky/conky-startup.sh",
-	"$tools/authorizessh.py",
 	"$tools/config_test.yaml",
-	#"$tools/Configure-ESXi-Hosts.py",
-	#"$tools/HOL-SCSI.psm1",
-	"$tools/dnsupdate.py",
-	"$tools/fwoff.sh",
-	"$tools/proxyfilteroff.sh",
-	"$tools/hol-ssl.py",
-	"$tools/remove-hol-esxi-base.py",
-	"$tools/vpodchecker.py"
+	"$tools/Configure-ESXi-Hosts.py",
+	"$tools/HOL-SCSI.psm1",
+	"$tools/hol-ssl.py"
 	)	
 }
 
@@ -124,7 +117,7 @@ If ( $mgrcrons -Match "labstartup" ) {
 }
 
 If ( $LMC -eq $true ) {
-	$crons = remoteLinuxCmdLMC mainconsole holuser $linuxpassword "crontab -l"
+	$crons = remoteLinuxCmdLMC console holuser $linuxpassword "crontab -l"
 	If ( $crons -Like "*conkywatch*" ) {
 		Write-Logs "PASS" "Core Team" "Lab Files" "Cron entry for conky on the LMC is present."
 	} Else {
@@ -160,7 +153,7 @@ checkCTVersion $labStartup $labStartupDate
 checkCTVersion  $labStartupFunctions $labStartupFunctionsDate
 
 Write-Output "Checking $LabStartupFunctions for edits..."
-$refLabStartupFunctionsHash = "e7cdfe5cd9e6a3acb5128ba4b2eb7186bb910ffc3e9b1aac2958a0d26bbfdacc"
+$refLabStartupFunctionsHash = "eba533006ea2ca2d41d52be9dde8e99b1f61b845a3e39f649ff92e7700c0405e"
 $HashAlgorithm = 'SHA256' #one of the supported types: MD5, SHA1, SHA256, SHA384, SHA512
 $lsfHash = Get-FileHash -Path $labStartupFunctions -Algorithm $HashAlgorithm
 $lsFunctionsHash = $lsfHash.Hash.ToLower()
@@ -173,18 +166,18 @@ If ( $refLabStartupFunctionsHash -Match $lsFunctionsHash ) {
 
 # 01-March 2024 vPodRouterHOL checks
 $errorVar = ''
-$getrulesDate = "29 February 2024 00:00 AM"
-Write-Output "Checking vPodRouterHOL..."
+$getrulesDate = "05 April 2025 00:00 AM"
+Write-Output "Checking Router..."
 # verify getrules.sh
 $getRules = "/root/getrules.sh"
 $localRules = "/tmp/getrules.sh"
 Write-Output "Copying $getRules on the router to $localRules locally..."
 # copy the file locally and just run the command.
-$out = scpLMC "root@router:$getRules" $localRules  $password
+$out = scpLMC "root@router:$getRules" $localRules  $rtrpassword
 checkCTVersion  $localRules $getRulesDate
 
 # get checksum on getrules.sh
-$getrulesChecksumRef = "3219771890"  
+$getrulesChecksumRef = "2192429393"  
 $grCKsumCmd = "/usr/bin/cksum /tmp/getrules.sh | cut -f1 -d' ' > /tmp/rulescksum"
 Invoke-Expression  $grCKsumCmd
 $grkCKsum = Get-Content -Path "/tmp/rulescksum"
@@ -203,30 +196,30 @@ Try {
 # get /root/version.txt if it exists
 Write-Output "Checking /root/version.txt on router..."
 Try {
-	$out = scpLMC "root@router:/root/version.txt" "/tmp/version.txt"  $password
+	$out = scpLMC "root@router:/root/version.txt" "/tmp/version.txt"  $rtrpassword
 	$rtrVer = Get-Content -Path "/tmp/version.txt"
-	Write-Logs "INFO" "Core Team" "vPodRouterHOL Version" $rtrVer
+	Write-Logs "INFO" "Core Team" "router Version" $rtrVer
 } Catch {
-	Write-Logs "FAIL" "Core Team" "vPodRouterHOL Version" "Cannot check vPodRouterHOL version. $errorVar"
+	Write-Logs "FAIL" "Core Team" "router Version" "Cannot check router version. $errorVar"
 }
 
 # check the time zone - UTC is PASS, not UTC FAIL
 $tzCmd = 'date +%Z'
-$rtrTZ = remoteLinuxCmdLMC "router" $linuxuser $linuxpassword $tzCmd
+$rtrTZ = remoteLinuxCmdLMC "router" $linuxuser $rtrpassword $tzCmd
 
 If ( $rtrTZ -Like "*UTC*" ) {
-	Write-Logs "PASS" "Core Team" "vPodRouterHOL Time Zone" "vPodRouterHOL is set to UTC time zone."
+	Write-Logs "PASS" "Core Team" "router Time Zone" "router is set to UTC time zone."
 } ElseIf ( $errorVal.length -gt 0 ) {
-	Write-Logs "FAIL" "Core Team" "vPodRouterHOL Time Zone" "Cannot check time zone on vPodRouterHOL $errorVar"
+	Write-Logs "FAIL" "Core Team" "router Time Zone" "Cannot check time zone on router $errorVar"
 } Else {
-	Write-Logs "FAIL" "Core Team" "vPodRouterHOL Time Zone" "vPodRouterHOL must use UTC time zone and not $rtrTZ."
+	Write-Logs "FAIL" "Core Team" "router Time Zone" "router must use UTC time zone and not $rtrTZ."
 }
 
 # check for authorized_keys file on the router
-Write-Output "Checking for ssh auth (passwordless login) from Main Console to router"
-$output = remoteLinuxCmdLMC "router" $linuxuser $linuxpassword "ls .ssh"
+Write-Output "Checking for ssh auth (passwordless login) from on router"
+$output = remoteLinuxCmdLMC "router" $linuxuser $rtrpassword "ls .ssh"
 If ( $output -Like "*authorized_keys*" ) {
-	# check for ssh auth to router from Main Console
+	# check for ssh auth to router
 	If ( $WMC ) {
 		# run the command without a password to test aah auth
 		$winCmd = "\hol\Tools\plink.exe -batch root@router date"
@@ -276,10 +269,9 @@ If ( $WMC ) {
 	Remove-Item "$mcholroot/run.ps1"
 } ElseIf ( $LMC ) {
 	Write-Output "Checking DNS forwarders on LMC..."
-	# nmcli device show ens160 | grep IP4 ( will show DNS servers from GUI)
-	$lcmd = "nmcli device show ens160 | grep IP4.DNS"
-	$nmscliOut = remoteLinuxCmdLMC mainconsole holuser $linuxpassword $lcmd
-	#$nmscliOut = Invoke-Expression -Command "nmcli device show ens160 | grep IP4.DNS" -ErrorVariable errorVar
+	# nmcli device show ens33 | grep IP4 ( will show DNS servers from GUI)
+	$lcmd = "nmcli device show ens33 | grep IP4.DNS"
+	$nmscliOut = remoteLinuxCmdLMC console holuser $linuxpassword $lcmd
 	ForEach ( $line in $nmscliOut ) {
 		$tmp = $line.Split()		
 		$ip = $tmp[$tmp.Length-1]
@@ -289,7 +281,7 @@ If ( $WMC ) {
 		}
 	}
 	# check entries in /etc/resolv.conf - NetworkManager overwrites anyway)
-	scpLMC "holuser@mainconsole:/etc/resolv.conf" "/tmp/resolv.conf" $password
+	scpLMC "holuser@console:/etc/resolv.conf" "/tmp/resolv.conf" $password
 	$resolv = Get-Content -Path "/tmp/resolv.conf"
 	ForEach ( $line in $resolv ) {
 		($junk, $ip) = $line.Split()
@@ -297,22 +289,6 @@ If ( $WMC ) {
 			If ( $fwd -ne '' ) { $fwd += ":" }
 			$fwd += $ip
 		}
-	}
-	# check /etc/bind
-	$bind = Get-Content -Path "/lmchol/etc/bind/named.conf.options"
-	$ctr = 0
-	$end = 0
-	$start = 99999
-	ForEach ( $line in $bind ) {
-		If ( $line -Like "*forwarders {*" ) { $start = $ctr }
-		If ( $start -gt 1 -And $ctr -gt $start -And $line -Like "*};*" -And !$end ) { $end = $ctr }
-		If ( $ctr -gt $start -And $end -eq 0  ) {
-			If ( $ip -eq "" ) { Continue }
-			$ip = $line.Trim()
-			$ip = $ip -Replace ";", ""
-			If ( $fwd  -Like "*.*" ) { $fwd += ":" }
-		}
-		$ctr++
 	}
 }
 
@@ -322,14 +298,14 @@ $fwd = $fwd.Replace("\r", "")
 $fwd = $fwd.Replace("[", "")
 $fwd = $fwd.Replace("]", "")
 $fwd = $fwd.TrimEnd(":")
-$fwd = $fwd.SubString(0,$fwd.Length -1 )
+#$fwd = $fwd.SubString(0,$fwd.Length -1 )
 
 $foundFwd = $false
 ForEach ($pattern in $dnsForwarders){
 	#Write-Host "pattern: $pattern source: $source"
 	If ( $fwd -Like "*$pattern*" ) {
 		$foundFwd = $true
-		Write-Logs "PASS" "Core Team" "DNS Forwarders" "DNS forwarders include an HOL standard. Forwarders ($fwd)"
+		Write-Logs "PASS" "Core Team" "DNS Forwarders" "DNS forwarders include HOL standards. Forwarders ($fwd)"
 		Break
 	}
 }
@@ -361,9 +337,9 @@ If ( $WMC ) {
 	$currentWallpaper = Get-Item -Path $currentWallpaperPath
 	Remove-Item "$mcholroot/run.ps1"
 } ElseIf ( $LMC ) {
-	$defaultWPPath =  "/lmchol/home/holuser/.local/share/backgrounds/2024-03-16-15-08-01-TranscodedWallpaper.jpg"
+	$defaultWPPath =  "/lmchol/home/holuser/.local/share/backgrounds/2025-01-09-13-28-16-TranscodedWallpaper.jpg"
 	$lcmd = "gsettings get org.gnome.desktop.background picture-uri"
-	$output = remoteLinuxCmdLMC mainconsole holuser $linuxpassword $lcmd
+	$output = remoteLinuxCmdLMC console holuser $linuxpassword $lcmd
 	$tmpOut = $output.Split()
 	$currentWallpaperPath = $tmpOut[0]
 	#Write-Host ".${currentWallpaperPath}."
@@ -419,38 +395,38 @@ If ( Test-Path $vPodVersion ) {
 	Write-Logs "FAIL" "VERSION File" $vPodVersion "Failed to find version.txt in $labStartupRoot"
 }
 
-Write-Output "Retrieving proxy log and firewall rules from vPodRouter... "
+Write-Output "Retrieving proxy log and firewall rules from the router... "
 #24 vPodRouter iptables firewall working as expected - Doug to make accessible to holuser
 #25 vPodRouter Proxy working as expected - Doug to make accessible to holuser (check Windows Internet proxy setting)
 
-# 06/08/2020 add /etc/tinyproxy/* and /root/iptablescfg.sh to $routerSource
+# 06/08/2020 add /etc/squid/* and /root/iptablescfg.sh to $routerSource
 $proxyFileCopy = @"
-"cp /etc/tinyproxy/* /home/holuser/running_config"
+"cp /etc/squid/* /home/holuser/running_config"
 "@
 $fwFileCopy = @"
 "cp /root/iptablescfg.sh /home/holuser/running_config"
 "@
 
-$quiet = remoteLinuxCmdLMC "router.$dom" $linuxuser $linuxpassword $proxyFileCopy
+$quiet = remoteLinuxCmdLMC "router" $linuxuser $rtrpassword $proxyFileCopy
 
-$quiet = remoteLinuxCmdLMC "router.$dom" $linuxuser $linuxpassword $fwFileCopy
+$quiet = remoteLinuxCmdLMC "router" $linuxuser $rtrpassword $fwFileCopy
 
-$routerSource = "router.${dom}:/home/holuser/running_config/*"
-$localDest = Join-Path -Path $logDir -ChildPath "vPodRouter"
+$routerSource = "router:/home/holuser/running_config/*"
+$localDest = Join-Path -Path $logDir -ChildPath "router"
 If ( Test-Path $localDest) {
 	Remove-Item -Path $localDest -Recurse -Force 
 } 
 New-Item -Path $localDest -ItemType Directory -ErrorAction 0 | Out-Null
-$msg = scpLMC "holuser@$routerSource" $localDest $linuxpassword
+$msg = scpLMC "root@$routerSource" $localDest $rtrpassword
 Invoke-Expression "chmod a+w $localDest/*"
 
 If( $msg -match "no such file or directory" ) {
 	Write-Output "No files found."
-	Write-Logs "FAIL" "vPodRouter" "Proxy/Firewall settings" "No files found at $routerSource."
+	Write-Logs "FAIL" "Router" "Proxy/Firewall settings" "No files found at $routerSource."
 } Else {
 	Remove-Item -Path "$localDest/*.orig"
 	Write-Output "Copied $routerSource to $localDest."
-	Write-Logs "INFO" "vPodRouter" "Proxy/Firewall settings" "Copied $routerSource to $localDest."
+	Write-Logs "INFO" "Router" "Proxy/Firewall settings" "Copied $routerSource to $localDest."
 }
 
 Write-Output "Collecting core lab files..."
