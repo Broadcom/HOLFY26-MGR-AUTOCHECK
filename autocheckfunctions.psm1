@@ -1,7 +1,7 @@
 <#
 	Autocheck Functions *Module* for VMware Hands-on Labs
 	
-	AutoCheckfunctions.psm1 - version 2.10 - 25-June 2024
+	AutoCheckfunctions.psm1 - version 2.5 - 21-April 2025
 	
 	Support only running from the Manager VM
 
@@ -38,16 +38,17 @@ $dom = $dom.Trim()
 Export-ModuleMember -Variable dom
 
 # Core Team machine IP addresses
-$mcIP = "10.0.0.2"
+$mcIP = "10.1.10.130"
 Export-ModuleMember -Variable MCip
 
-$rtrIP = "10.0.0.2"
+$rtrIP = "10.1.10.129"
 Export-ModuleMember -Variable MCip
 
-$stgIP = "10.0.0.60"
+# TODO: confirm this IP
+$stgIP = "10.1.1.3"
 Export-ModuleMember -Variable stgIP
 
-$mgrIP = "10.0.0.11"
+$mgrIP = "10.1.10.131"
 Export-ModuleMember -Variable mgrIP
 
 # need to know if WMC or LMC
@@ -74,10 +75,12 @@ New-Item -Path $TMPlogDir -Name "AutoCheck" -ItemType "directory" -Force
 $logDir = Join-Path -Path $TMPlogDir -ChildPath "AutoCheck"
 Export-ModuleMember -Variable logDir
 
-($junk, $lab_sku) = (Get-Content $TMPlogDir/vPod_SKU.txt).Split('-')
+($junk, $vpod_sku) = (Get-Content $TMPlogDir/vPod.txt -First 1).Split('=')
+($junk, $lab_sku) = $vpod_sku.Split('-')
 $year = $lab_sku.Substring(0, 2)
 Export-ModuleMember -Variable lab_sku
 Export-ModuleMember -Variable year
+
 
 # the path to the "resource" files that contain the vCenters, hosts, services, etc.
 $resourceFileDir = "/vpodrepo/20${year}-labs/$lab_sku"
@@ -99,21 +102,22 @@ If ( Test-Path $vAppNameFile ) {
 $vcusers = ("Administrator@$dom",'Administrator@vsphere.local', 'Administrator@vsphere2.local', 'Administrator@regiona.local', 'Administrator@regionb.local')
 Export-ModuleMember -Variable vcusers
 
-# get the password from $configIni
-$p = Select-String -Path $configIni -Pattern "^password =" | Out-String
-$p = $p.TrimEnd()
-($junk, $password) = $p.Split('= ')
+# get the password from ~holuser/creds.txt
+$password = Get-Content '/home/holuser/creds.txt' -First 1
 Export-ModuleMember -Variable password
+
+$rtrpassword = Get-Content '/home/holuser/rtrcreds.txt' -First 1
+Export-ModuleMember -Variable rtrpassword
 
 # Credentials used to log into Linux machines
 $linuxuser = 'root'
-$linuxpassword = 'VMware123!'
+$linuxpassword = $password
 Export-ModuleMember -Variable linuxuser
 Export-ModuleMember -Variable linuxpassword
 
 # Credentials used to log in to NSX Manager machines
 $nsxuser = 'admin'
-$nsxpassword = 'VMware123!VMware123!'
+$nsxpassword = $password
 Export-ModuleMember -Variable nsxuser
 Export-ModuleMember -Variable nsxpassword
 
@@ -1086,8 +1090,7 @@ Function remoteLinuxCmdLMC () {
 	For use on LMC: This function creates a temporary ssh shellscript to connect to the $server using $username
 	to run $command then runs the script using AutoCheck's expectpass.sh and returns the output.
 	If $option is "nsx" then leave out the /bin/sh part of the command.
-	If $option is "sshauth" then run testsshauth.sh instead of expectpass.sh
-	
+        $x is for ssh X forwarding (needed for xrandr command on Console)	
 #>
 	[CmdletBinding()]
 	PARAM (
@@ -1106,11 +1109,15 @@ Function remoteLinuxCmdLMC () {
 		
 		[Parameter(Mandatory=$true)]
 		[ValidateNotNullOrEmpty()]
-		[String]$command
+		[String]$command,
+
+		[Parameter(Mandatory=$false)]
+		[ValidateNotNullOrEmpty()]
+		[String]$x
 	)
 	
 	BEGIN {
-		$lcmd = "$sshPass -p $pswrd ssh $sshOptions ${userName}@$server $command 2>&1"
+		$lcmd = "$sshPass -p $pswrd ssh $x $sshOptions ${userName}@$server $command 2>&1"
 		#Write-Host $lcmd
 	}
 	
