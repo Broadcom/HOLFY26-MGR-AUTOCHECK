@@ -1,10 +1,13 @@
 #!/usr/bin/sh
-# version 1.0 01-May 2024
+# version 1.1 22-April 2024
 
 pwd=`pwd`
 cd ~holuser/autocheck
 echo -n "git pull: "
 git pull
+
+echo "Installing PSSQLite module for PowerShell..."
+pwsh -Command Install-Module PSSQLite -Confirm:\$false -Force
 
 echo "PowerCLI: Disabling CEIP..."
 pwsh -Command 'Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP $false -Confirm:$false' > /dev/null

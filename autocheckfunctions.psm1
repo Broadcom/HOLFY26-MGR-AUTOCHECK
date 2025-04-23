@@ -1223,12 +1223,16 @@ Function endAutoCheck () {
 		#Write-Host $result
 		Write-Output "Open C:\Temp\$htmlFile to view the AutoCheck report."
 	} ElseIf ( $LMC ) {
-		$lcmd = "/bin/firefox --display=:0 /tmp/$htmlFile"
-		Write-Output "Starting Firefox on LMC web console (only) to review AutoCheck report at /tmp/$htmlFile."
-		Write-Output "Exit Firefox when finished."
-		Write-Output "Note that you must be on the web console to see Firefox."
-		$output = remoteLinuxCmdLMC "mainconsole.$dom" "holuser" $linuxpassword $lcmd
-		Write-Host $output
+                # due to Firefox snap permissions - copy HTML report /home/holuser
+                Copy-Item "/lmchol/tmp/$htmlFile" -Destination "/lmchol/home/holuser/$htmlFile"
+                Copy-Item "/lmchol/tmp/HTML" -Force -Recurse -Destination "/lmchol/home/holuser/HTML"
+                # this does not work with Ubuntu 24.04.
+		#$lcmd = "/usr/bin/firefox --display=:0 /home/holuser/$htmlFile"
+		#Write-Output "Starting Firefox on LMC web console (only) to review AutoCheck report at /tmp/$htmlFile."
+		#Write-Output "Exit Firefox when finished."
+		Write-Output "Double click the /home/holuser/$htmlFile file on the Console to see the AutoCheck report in Firefox."
+		#$output = remoteLinuxCmdLMC "console" "holuser" $linuxpassword $lcmd
+		#Write-Host $output
 	}
 
 } # End Function endAutoCheck

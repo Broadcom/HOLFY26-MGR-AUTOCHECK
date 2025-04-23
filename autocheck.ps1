@@ -306,7 +306,7 @@ If ( $vPodName -Match "HOL-\d\d\d\d-v0\.\d+$" ) {
 Invoke-Expression "pwsh -File $PSScriptRoot/checkcoreteamtools.ps1"
 
 # check the Main Console
-Invoke-Expression "pwsh -File $PSScriptRoot/checkmainconsole.ps1"
+Invoke-Expression "pwsh -File $PSScriptRoot/checkconsole.ps1"
 
 Write-Output "Checking web browser and Internet proxy settings..."
 #45 Google Chrome "Do not send data" settings
@@ -314,11 +314,11 @@ Write-Output "Checking web browser and Internet proxy settings..."
 
 Copy-Item "$PSSCriptRoot/checkbrowsers.ps1" "$mcholroot/checkbrowsers.ps1" 
 If ( $WMC ) {
-	$quiet = RunWinCmd "pwsh -File C:\hol\checkbrowsers.ps1" ([REF]$result) 'mainconsole' 'Administrator' $password
+	$quiet = RunWinCmd "pwsh -File C:\hol\checkbrowsers.ps1" ([REF]$result) 'console' 'Administrator' $password
 } ElseIf ( $LMC ) {
-	remoteLinuxCmdLMC "mainconsole.$dom" "holuser" $password "pwsh -File /hol/checkbrowsers.ps1"
+	remoteLinuxCmdLMC "console" "holuser" $password "pwsh -File /hol/checkbrowsers.ps1"
 	$internetSettingsCmd = "gsettings list-recursively org.gnome.system.proxy"
-	$internetSettings = Invoke-Expression "sshpass -p $password ssh holuser@mainconsole $internetSettingsCmd"
+	$internetSettings = Invoke-Expression "sshpass -p $password ssh holuser@console $internetSettingsCmd"
 	ForEach ( $setting in $internetSettings ) {
 		If ( $setting -Like "*org.gnome.system.proxy mode*" ) {
 		  ($p, $k, $proxyEnabled) = $setting.Split()
@@ -328,6 +328,11 @@ If ( $WMC ) {
 		}
 	}
 	Write-Logs "INFO" "Proxy" "Proxy System Settings" "proxyEnabled: $proxyEnabled proxyServer: $proxyServer"
+}
+
+While ( -not ( Test-Path -Path "$mcholroot/checkbrowsers.txt" ) ) {
+        Write-Output "Waiting for $mcholroot/checkbrowsers.txt..."
+	Start-Sleep -Seconds 5
 }
 ForEach ( $line in Get-Content -Path "$mcholroot/checkbrowsers.txt" ) {
 	$line = $line.Trim()
@@ -351,6 +356,7 @@ Remove-Item "$mcholroot/checkbrowsers.txt"
 #40 Browser history & cache cleared (well - at least history only contains lab URLs - not sure about cache)
 
 Invoke-Expression "pwsh -File $PSScriptRoot/checkurls.ps1"
+
 
 ##############################################################################
 ##### Check vSphere

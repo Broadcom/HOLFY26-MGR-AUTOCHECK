@@ -1,4 +1,4 @@
-# checkurls.ps1 04-May 2024
+# checkurls.ps1 22-April 2025
 
 # updated 7/2/2020 added better SSL Cert expiration message using licenseExpiration.txt
 # updated 7/2/2020 single FAIL for Chrome browser history. Multiple line detail listing history URLs
@@ -115,14 +115,14 @@ If ( $WMC ) {
 	}
 	}
 } ElseIf ( $LMC ) {
-	$ffDbPath = Get-ChildItem -Path "$mc/home/holuser/.mozilla/firefox/*.default-release/places.sqlite"
+	$ffDbPath = Get-ChildItem -Path "$mc/home/holuser/snap/firefox/common/.mozilla/firefox/*.default/places.sqlite"
 	$ffcmd = "ps -ef | grep /usr/lib/firefox | grep -v grep"
-	$ff = remoteLinuxCmdLMC "mainconsole.$dom" "holuser" $password $ffcmd
+	$ff = remoteLinuxCmdLMC "console" "holuser" $password $ffcmd
 	#Write-Host ".${ff}."
 	While ( $ff  -ne "" ) {
 		Write-Output "Please exit Firefox. Cannot perform Firefox checks while Firefox is running."
 		Start-Sleep $sleepSeconds
-		$ff = remoteLinuxCmdLMC "mainconsole.$dom" "holuser" $password $ffcmd
+		$ff = remoteLinuxCmdLMC "console" "holuser" $password $ffcmd
 	}
 	$allPlaces = Invoke-SqliteQuery -DataSource $ffDbPath -Query “SELECT url FROM moz_places”
 	$bookmarkIDs = Invoke-SqliteQuery -DataSource $ffDbPath -Query "SELECT fk FROM moz_bookmarks WHERE fk NOT NULL"
@@ -309,4 +309,3 @@ If ( $urls ) {
 } Else {
 	Write-Logs "PASS" $browser "Browser History" "$browser browser history looks good. Thanks!"
 }
-

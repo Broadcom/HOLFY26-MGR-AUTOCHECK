@@ -1,4 +1,4 @@
-# checkbrowsers.ps1 27-March 2024
+# checkbrowsers.ps1 22-April 2025
 If ( $isWindows ) { $out = "C:\hol\checkbrowsers.txt"
 } ElseIf ( $isLinux ) { $out = "/hol/checkbrowsers.txt" }
 Set-Content -Path $out -Value "" -NoNewline
@@ -39,7 +39,7 @@ If ( $isWindows ) {
 	}
 	$ffDir = Get-ChildItem -Path "$Env:systemdrive\Users\Administrator\AppData\Roaming\Mozilla\Firefox\Profiles\*.default-release"
 } ElseIf ( $isLinux ) { # check Firefox browser		
-	$ffDir = Get-ChildItem -Path "/home/holuser/.mozilla/firefox/*.default-release"
+	$ffDir = Get-ChildItem -Path "/home/holuser/snap/firefox/common/.mozilla/firefox/*.default"
 }
 
 $userPrefs = Join-Path -Path $ffDir -ChildPath "prefs.js"
