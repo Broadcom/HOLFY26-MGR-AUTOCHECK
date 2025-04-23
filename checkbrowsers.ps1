@@ -1,6 +1,6 @@
 # checkbrowsers.ps1 22-April 2025
 If ( $isWindows ) { $out = "C:\hol\checkbrowsers.txt"
-} ElseIf ( $isLinux ) { $out = "/hol/checkbrowsers.txt" }
+} ElseIf ( $isLinux ) { $out = "/tmp/checkbrowsers.txt" }
 Set-Content -Path $out -Value "" -NoNewline
 
 If ( $isWindows ) {

@@ -312,11 +312,13 @@ Write-Output "Checking web browser and Internet proxy settings..."
 #45 Google Chrome "Do not send data" settings
 #44 Plugins: Allow all (and remember) - actually the best we can do with Chrome now is "Ask" and not "Block"
 
-Copy-Item "$PSSCriptRoot/checkbrowsers.ps1" "$mcholroot/checkbrowsers.ps1" 
+Copy-Item -Path $PSSCriptRoot/checkbrowsers.ps1 -Destination $mcTmp/checkbrowsers.ps1
 If ( $WMC ) {
 	$quiet = RunWinCmd "pwsh -File C:\hol\checkbrowsers.ps1" ([REF]$result) 'console' 'Administrator' $password
 } ElseIf ( $LMC ) {
-	remoteLinuxCmdLMC "console" "holuser" $password "pwsh -File /hol/checkbrowsers.ps1"
+	# copy again using Linux command
+	Invoke-Expression "cp /home/holuser/autocheck/checkbrowsers.ps1 /lmchol/tmp/checkbrowsers.ps1"
+	remoteLinuxCmdLMC "console" "holuser" $password "pwsh -File /tmp/checkbrowsers.ps1"
 	$internetSettingsCmd = "gsettings list-recursively org.gnome.system.proxy"
 	$internetSettings = Invoke-Expression "sshpass -p $password ssh holuser@console $internetSettingsCmd"
 	ForEach ( $setting in $internetSettings ) {
@@ -330,17 +332,19 @@ If ( $WMC ) {
 	Write-Logs "INFO" "Proxy" "Proxy System Settings" "proxyEnabled: $proxyEnabled proxyServer: $proxyServer"
 }
 
-While ( -not ( Test-Path -Path "$mcholroot/checkbrowsers.txt" ) ) {
-        Write-Output "Waiting for $mcholroot/checkbrowsers.txt..."
+# copy the checkbrowsers.txt file to local then process. bug with Test-Path over NFS.
+Invoke-Expression "cp $mctmp/checkbrowsers.txt /tmp/checkbrowsers.txt"
+While ( -not ( Test-Path -Path "/tmp/checkbrowsers.txt" ) ) {
+        Write-Output "Waiting for /tmp/checkbrowsers.txt..."
 	Start-Sleep -Seconds 5
 }
-ForEach ( $line in Get-Content -Path "$mcholroot/checkbrowsers.txt" ) {
+ForEach ( $line in Get-Content -Path "/tmp/checkbrowsers.txt" ) {
 	$line = $line.Trim()
 	$scratchFields = $line.Split('~')
 	Write-Logs $scratchFields[0] $scratchFields[1] $scratchFields[2] $scratchFields[3]
 }
-Remove-Item "$mcholroot/checkbrowsers.ps1"
-Remove-Item "$mcholroot/checkbrowsers.txt"
+Remove-Item "$mctmp/checkbrowsers.ps1"
+Remove-Item "$mctmp/checkbrowsers.txt"
 
 ##############################################################################
 ##### Check Browser Bookmarks against URLs.txt
@@ -380,6 +384,10 @@ Invoke-Expression "pwsh -File $PSScriptRoot/checkurls.ps1"
 # Report card #39 If using VSAN, Explicit HDD and SSD flags configured
 
 Invoke-Expression "pwsh -File $PSScriptRoot/checkvsphere.ps1"
+
+# DEBUG move down as work progresses
+endAutoCheck
+exit
 
 #####################################################################################
 ##### Check Linux machines (PuTTY sessions, DNS, valid IP and SSH service, L1 and L2)
