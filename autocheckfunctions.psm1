@@ -1,7 +1,7 @@
 <#
 	Autocheck Functions *Module* for VMware Hands-on Labs
 	
-	AutoCheckfunctions.psm1 - version 2.5 - 21-April 2025
+	AutoCheckfunctions.psm1 - version 2.5 - 23-April 2025
 	
 	Support only running from the Manager VM
 
@@ -69,6 +69,7 @@ Export-ModuleMember -Variable LMC
 Export-ModuleMember -Variable WMC
 Export-ModuleMember -Variable mc
 Export-ModuleMember -Variable mcholroot
+Export-ModuleMember -Variable mcTmp
 
 $TMPlogDir = "/tmp"
 New-Item -Path $TMPlogDir -Name "AutoCheck" -ItemType "directory" -Force
@@ -171,11 +172,10 @@ Export-ModuleMember -Variable ipPatterns
 
 # 2024: just use "ntp" and depend on DNS resolution
 # allowed NTP time source patterns array
-$timeSources = @('*10.0.100.1*',
+$timeSources = @('*10.1.1.1*',
 				'*ntp*',
-				'*10.0.0.1*',
 				'*router*',
-				'*10.0.0.221*')
+				'*10.1.10.229*')
 Export-ModuleMember -Variable timeSources
 
 $dnsForwarders = @('*8.8.8.8*',
@@ -186,25 +186,13 @@ Export-ModuleMember -Variable dnsForwarders
 
 # need to maintain vcVersion and build number hash from the base templates
 $vcVersion = @{
-"6.7.0" = "17137327"  # 2020: "6.7.0" = "15129973"
-"7.0.0" = "15952498"  # 2020 base
-"7.0.2" = "17694817"  # 2021 base
-"7.0.3" = "19717403"  # 2022 base 7.0.3.00600 (7.0U3e)
-"8.0.0" = "20920323"  # 2023 base
-"8.0.2" = "22617221"  # 2024 base 23319993
-"8.0.2VCF" = "23319993"  # 2024 VCF base
+"9.0.0" = "24678707"  # 2025 VCF base
 }
 Export-ModuleMember -Variable vcVersion
 
 # need to maintain esxVersion and build number hash from the base templates
 $esxVersion = @{
-"6.7.0" = "14320388"  # 2020: "6.7.0" = "15160138"
-"7.0.0" = "15843807"  # 2020 base
-"7.0.2" = "17630552"  # 2021 base
-"7.0.3" = "19482537"  # 2022 base 7.0.3.19482537 (7.0U3d)
-"8.0.0" = "20513097"  # 2023 base
-"8.0.2" = "22380479"  # 2024 base 
-"8.0.2VCF" = "23305546"  # 2024 VCF base
+"9.0.0" = "24678710"  # 2025 VCF base
 }
 Export-ModuleMember -Variable esxVersion
 
@@ -1225,6 +1213,10 @@ Function endAutoCheck () {
 	} ElseIf ( $LMC ) {
                 # due to Firefox snap permissions - copy HTML report /home/holuser
                 Copy-Item "/lmchol/tmp/$htmlFile" -Destination "/lmchol/home/holuser/$htmlFile"
+		# remove the HTML folder first if it exists (issues with getting updates on multiple runs)
+		If (Test-Path -Path "/lmchol/home/holuser/HTML" ) {
+			Remove-Item -Path "/lmchol/home/holuser/HTML" -Force -Recurse 
+		}
                 Copy-Item "/lmchol/tmp/HTML" -Force -Recurse -Destination "/lmchol/home/holuser/HTML"
                 # this does not work with Ubuntu 24.04.
 		#$lcmd = "/usr/bin/firefox --display=:0 /home/holuser/$htmlFile"

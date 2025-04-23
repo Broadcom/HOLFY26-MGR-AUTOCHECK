@@ -1,4 +1,4 @@
-# checkurls.ps1 22-April 2025
+# checkurls.ps1 23-April 2025
 
 # updated 7/2/2020 added better SSL Cert expiration message using licenseExpiration.txt
 # updated 7/2/2020 single FAIL for Chrome browser history. Multiple line detail listing history URLs
@@ -49,7 +49,7 @@ Foreach ($entry in $URLs) {
 	#Write-Host "entry: $entry"
 	($url,$response) = $entry.Split(",")
 	If (!$response) { # 8/20/2020 WARN if empty response
-		Write-Logs "WARN" "URLs.txt" "Response Match" "$url test has no response to match. Please add a response to check."
+		Write-Logs "WARN" "URLs" "Response Match" "$url test has no response to match. Please add a response to check."
 	}
 	$allURLs += $url
 	 If( $url -match 'https' ) { 
@@ -59,7 +59,7 @@ Foreach ($entry in $URLs) {
 #ForEach ( $url in $urlsToTest ) { Write-Host $url }
 
 ##############################################################################
-##### Check Browser Bookmarks against URLs.txt
+##### Check Browser Bookmarks against URLs in config.ini
 ##############################################################################
 
 $bookmarks = @()
@@ -149,15 +149,15 @@ Foreach ($bookmark in $bookmarks) {
 		#Write-Output "bookmark: $bookmark url: $url h: $h"
 		If ( ($url -Like "*$bookmark*") -Or ($bookmark -Like "*$url*") ) {
 			$found = $true
-			Write-Logs "PASS" $bookmark $function "$browser bookmark was found in URLs.txt"
+			Write-Logs "PASS" $bookmark $function "$browser bookmark was found in config.ini URLs"
 			Break
 		}
 	}
-	If ( $found -eq "skip" ) { Continue } # a similar URL was found in URLs.txt
+	If ( $found -eq "skip" ) { Continue } # a similar URL was found in the config.ini
 	If ( -Not $found ) {
 		#Write-OutPut $bookmark
 		$allURLs += $bookmark
-		#if the port responds and they are not checking then that is a fail.
+		#if the port responds and they are not checking then that is a warn.
 		$f = $bookmark.Split(":")
 		$s = $f[1].Split("/")
 		$server = $s[2]
@@ -170,7 +170,7 @@ Foreach ($bookmark in $bookmarks) {
 		#Write-Output "Testing $bookmark server: $server on port: $port "
 		Test-TcpPortOpen -Server $server -Port $port -Result ([REF]$result)
 		If ( $result -eq "success" ) {
-			Write-Logs "FAIL" $bookmark $function "Live $browser bookmark was NOT found in URLs.txt for LabStartup testing. LabStartup should test every URL if available at start of lab."
+			Write-Logs "WARN" $bookmark $function "Live $browser bookmark was NOT found in config.ini for LabStartup testing. LabStartup should test every URL if available at start of lab."
 			If( $url -match 'https' ) { # Add this browser bookmark for SSL certificate checking
 				$urlsToTest += $bookmark
 			}
@@ -178,14 +178,14 @@ Foreach ($bookmark in $bookmarks) {
 			# try a web request here
 			Test-URL -Url $bookmark -Result ([REF]$result)
 			If ( $result -eq "success") {
-				Write-Logs "FAIL" $bookmark $function "Live $browser bookmark was NOT found in URLs.txt for LabStartup testing. LabStartup should test every URL if available at start of lab."
+				Write-Logs "WARN" $bookmark $function "Live $browser bookmark was NOT found in the config.ini for LabStartup testing. LabStartup should test every URL if available at start of lab."
 			} Else {
-				Write-Logs "INFO" $bookmark $function "No response from $browser bookmark NOT found in URLs.txt."
+				Write-Logs "INFO" $bookmark $function "No response from $browser bookmark NOT found in the config.ini."
 			}
 		}
 	}
 }
-# End Check Browser Bookmarks in URLs.txt
+# End Check Browser Bookmarks in config.ini
 
 ##############################################################################
 ##### Check SSL Certificates Expiration
