@@ -1,7 +1,7 @@
 <#
 	Autocheck Functions *Module* for VMware Hands-on Labs
 	
-	AutoCheckfunctions.psm1 - version 2.5 - 23-April 2025
+	AutoCheckfunctions.psm1 - version 2.5 - 25-April 2025
 	
 	Support only running from the Manager VM
 
@@ -175,7 +175,7 @@ Export-ModuleMember -Variable ipPatterns
 $timeSources = @('*10.1.1.1*',
 				'*ntp*',
 				'*router*',
-				'*10.1.10.229*')
+				'*10.1.10.129*')
 Export-ModuleMember -Variable timeSources
 
 $dnsForwarders = @('*8.8.8.8*',

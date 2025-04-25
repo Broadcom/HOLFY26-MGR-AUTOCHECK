@@ -1,5 +1,5 @@
-# AutoCheck.ps1 - 16-May 2024
-$version = "1.4.5"
+# AutoCheck.ps1 - 25-April 2025
+$version = "1.5.0"
 <#
 
 .SYNOPSIS			This script is intended to check VMware Hands-on Labs vPods.
@@ -385,10 +385,6 @@ Invoke-Expression "pwsh -File $PSScriptRoot/checkurls.ps1"
 
 Invoke-Expression "pwsh -File $PSScriptRoot/checkvsphere.ps1"
 
-# DEBUG move down as work progresses
-endAutoCheck
-exit
-
 #####################################################################################
 ##### Check Linux machines (PuTTY sessions, DNS, valid IP and SSH service, L1 and L2)
 #####################################################################################
@@ -412,14 +408,14 @@ Foreach ($line in $lines) {
 	
 	If ( $os -Like "*windows*" ) { Continue } # only check Linux machines here
 	If ( $name -Like "*manager*" ) { Continue } # do not check the Manager (only holuser account is available)
-	If ( $name -Like "*mainconsole*" ) { Continue } # do not check the Main Console
+	If ( $name -Like "*console*" ) { Continue } # do not check the Main Console
 	If ( $name -Like "*stg*-01a*" ) { Continue } # do not check the FreeNAS storage appliance
-	If ( $name -Like "*vpodrouter*" ) { Continue } # do not check the vpodrouter
+	If ( $name -Like "*router*" ) { Continue } # do not check the vpodrouter
 	$IPAdresses = $ipf.Split()
 	$ipAddress = Choose-IP($IPAdresses)
-	If ( ($name -like '*vPodRouter*') -Or ($name -like '*pfrouter*') ) { # vPodRouterHOL is special
+	If ($name -like '*router*') { # The router is special
 		$name = 'router'
-		$ipAddress = '10.0.100.1'
+		$ipAddress = '10.1.10.129'
 	}
 	If ( $ipAddress -eq $stgIP ) { Continue } # skip FreeNAS storage appliance
 	If ( $ipAddress -eq $mgrIP ) { Continue } # skip the Manager VM
@@ -1093,8 +1089,8 @@ Foreach ($ipTarget in $linuxMachines.keys) {  # BEGIN main loop for all Linux ch
 	}
 
 	##############################################################################
-	##### Check Linux time ( use account and VMware123! password )
-	##### Report card #52 VMs syncd to ntp.vcf.sddc.lab or 10.0.100.1
+	##### Check Linux time ( use account and standard password )
+	##### Report card #52 VMs syncd to ntp.site-a.vcf.lab, router.site-a.vcf.lab, 10.1.1.1 or 10.1.10.129
 	##############################################################################	
 	Write-Output "Checking Linux NTP configuration and time difference on $target ..."
 	
@@ -1627,10 +1623,11 @@ $storageCmd = "df -h"
 $report = @()
 Foreach ($ipTarget in $Layer1Linux.keys) {
 	$item = "" | Select Name, CPU, Memory, Storage
-	If ( $Layer1Linux[$ipTarget].Name -Like "esx*" ) { Continue } # will get vESXi utilization from vCenter (no top)
+	If ( $Layer1Linux[$ipTarget].Name -Like "*esx*" ) { Continue } # will get vESXi utilization from vCenter (no top)
 	If ( $ipTarget -eq $stgIP ) { Continue } # FreeNAS BSD top is different
-	If ( $ipTarget -eq $rtrIP ) { Continue } # vpodrouterHOL is most likely not an issue can investigate later
-	If ( $ipTarget -eq "192.168.0.2" ) { Continue } # other vpodrouterHOL IP
+	If ( $ipTarget -eq $rtrIP ) { Continue } # router is most likely not an issue can investigate later
+	If ( $ipTarget -eq "192.168.0.2" ) { Continue } # other router IP
+	If ( $ipTarget -eq "10.1.1.1" ) { Continue } # another router IP
 	If ( $ipTarget -eq $mgrIP) { Continue } # Manager VM skip
 	$item.Name = $Layer1Linux[$ipTarget].Name
 	$hostName = $item.Name
@@ -1908,7 +1905,11 @@ Foreach ($vm in $VMs) {
 		$memStat = Get-Stat -Stat "mem.usage.average" -MaxSamples 1  -Entity $vm -Realtime
 		$item.Memory = "{0:N2}%" -f ($memStat.Value)
 	}
-	$item.Storage = "{0:N2}%" -f ( ($vm.UsedSpaceGB / $vm.ProvisionedSpaceGB) * 100)
+	If ( $vm.ProvisionedSpaceGB -ne 0 ) {
+		$item.Storage = "{0:N2}%" -f ( ($vm.UsedSpaceGB / $vm.ProvisionedSpaceGB) * 100)
+	} Else {
+		$item.Storage = "N/A"
+	}
 	$report += $item
 }
 $output = $report | Sort-Object -Property Name | Format-Table -AutoSize
