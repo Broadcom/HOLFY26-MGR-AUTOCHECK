@@ -1,10 +1,13 @@
 #!/usr/bin/sh
-# version 1.1 22-April 2024
+# version 1.1 25-April 2024
 
 pwd=`pwd`
 cd ~holuser/autocheck
 echo -n "git pull: "
 git pull
+
+# need to turn off proxyfiltering to install PSSQLite
+~holuser/hol/Tools/proxyfilteroff.sh
 
 echo "Installing PSSQLite module for PowerShell..."
 pwsh -Command Install-Module PSSQLite -Confirm:\$false -Force
