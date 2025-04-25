@@ -1,4 +1,4 @@
-# checklinuxtime.ps1 28-June 2024
+# checklinuxtime.ps1 25-April 2025
 # updated 7/15/2020 Re-implemented time sync checking to handle all the known Linux and VMware appliance mechanisms
 # updated 7/23/2020 added ntpStatus NOSYNC to deal with Photon configuration correct but not NTP syncing
 # updated 1/24/2021 refined CentOS chronyc detection (2173 saltstack.$dom)
@@ -261,7 +261,7 @@ If ( $ntpStatus -eq 'FAIL' ) {
 	}
 }
 
-# vRealise Automation is different
+# VCF Automation is different
 If ( $ntpStatus -eq 'FAIL' ) {
 	# 6/15/2020 vRA vracli ntp show-config
 	Try {
