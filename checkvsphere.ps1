@@ -386,10 +386,12 @@ If ( $vcPresent ) {
 "Management Storage Policy - Stretched ESA" = "0"
 "Management Storage policy - Thin" = "0"
 "VM Encryption Policy" = "0"
-"vSAN Default Storage Policy" = "1"
+"vSAN Default Storage Policy" = "2"
 "VVol No Requirements Policy" = "0"
-"vSAN ESA Default Policy - RAID5" = "0"
-"vSAN ESA Default Policy - RAID6" = "0"
+"vSAN Stretched ESA Default Policy - RAID5" = "0"
+"vSAN Stretched ESA Default Policy - RAID6" = "0"
+"cluster-mgmt-01a vSAN Storage Policy" = "0"
+"vSAN Stretched ESA Default Policy" = "0"
 }
 
 	$sPolicyCheck = "PASS"
