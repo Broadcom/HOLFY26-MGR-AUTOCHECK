@@ -63,24 +63,71 @@ $ipTarget = $args[1] # IP address will NOT work for REST calls. Trust cannot be 
 
 $target = $hostName + "(" + $ipTarget + ")"
 
+$user = "admin" # VROPs administrative account
+
+$quiet = Connect-OMServer $hostName -user $user -password $password -WarningAction:SilentlyContinue
+
+$vROpsLicense = Get-OMResource | Where-Object {$_.ResourceKind -eq "Licensing"}
+#$vROpsLicense = Get-OMResource | Where-Object {$_.Name -Like "*Licensing*"}
+#Get-OMResource
+ForEach ( $lic in $vROpsLicense) {
+	#Write-Host $lic.Name $lic.Health  $lic.ResourceKind  $lic.Description
+	Write-Host "License Key: $($lic.Properties.where{$_.Key -eq 'licenseKey'}.Value)"
+	Write-Host "License Name: $($lic.Properties.where{$_.Key -eq 'licenseName'}.Value)"
+	Write-Host "Expiration Date: $($lic.Properties.where{$_.Key -eq 'expirationDate'}.Value)"
+}
+
+#$vROpsLicense.Name $vROpsLicense.Health  $vROpsLicense.ResourceKind  $vROpsLicense.Description
+
+#Write-Host "License Key: $($vrOpsLicense.Properties.where{$_.Key -eq 'licenseKey'}.Value)"
+#Write-Host "License Name: $($vrOpsLicense.Properties.where{$_.Key -eq 'licenseName'}.Value)"
+#Write-Host "Expiration Date: $($vrOpsLicense.Properties.where{$_.Key -eq 'expirationDate'}.Value)"
+
+Disconnect-OMServer  $hostName -Confirm:$false
+
+exit
+
+
 # need to be told the license expiration date for this vPod
 $licenseExpireDate = Get-Date "$expirationDate 12:00:00 AM"
 $chkDateMin = $licenseExpireDate.AddDays(-30)
 $chkDateMax = $licenseExpireDate.AddDays(30)
 
 $baseUrl = "https://$hostName/suite-api/api"  #Set up the base address
-$user = "admin" # VROPs administrative account
 
+# vROps server details
+$vropsServer = $baseUrl
+$username = $user
+
+# Encode credentials for Basic Authentication
+$base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $username,$password)))
+
+# Set headers for the request
+$headers = @{
+    "Authorization" = "Basic $base64AuthInfo"
+    "Accept" = "application/json"
+}
 
 $authHeaders = LogOnTovROPs $hostName $user
 
-Write-Logs "WARN" $target "Operations Appliance" "Operations appliance checks are NOT TESTED yet."
+#Write-Host $authHeaders
+
+#$vROPSSessionHeader = @{"Authorization"="vRealizeOpsToken "+$authHeaders.'auth-token'.token"Accept"="application/json"}
+
+#Write-Host $vROPSSessionHeader
+Exit
+
+
+#Write-Logs "WARN" $target "Operations Appliance" "Operations appliance checks are NOT TESTED yet."
 
 
 # retrieve the vROPs JSON license information
 Try {
 	$type = "application/json"
-	$jsonResponse = Invoke-WebRequest -Method 'GET' -Uri "${baseUrl}/deployment/licenses" -Headers $authHeaders -ContentType $type -ErrorAction SilentlyContinue
+	$jsonResponse = Invoke-WebRequest -Method 'GET' -Uri "${baseUrl}/deployment/licenses" `
+-Headers $authHeaders -ContentType $type -SkipCertificateCheck -ErrorAction SilentlyContinue
+        #Write-Host $jsonResponse
+Exit
 	$licenseInfo = $jsonResponse | ConvertFrom-Json
 	[int64]$epochExp = $licenseInfo.solutionLicenses.expirationDate
 	$expDate = $epoch.AddMilliSeconds($epochExp)
@@ -90,5 +137,6 @@ Try {
 		Write-Logs "FAIL" $target "vROPs licensing" "vRealize Operations  license on $target is bad. Expires on $expDate"
 	}
 } Finally {
-	$response = Invoke-WebRequest -Method 'POST' -Uri  "${baseUrl}/auth/token/release" -Headers $authHeaders -ContentType $type -ErrorAction SilentlyContinue
+	$response = Invoke-WebRequest -Method 'POST' -Uri  "${baseUrl}/auth/token/release" `
+-Headers $authHeaders -ContentType $type -SkipCertificateCheck -ErrorAction SilentlyContinue
 }
