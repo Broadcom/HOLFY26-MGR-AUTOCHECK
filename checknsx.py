@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-# 03-May 2024
+# 10-May 2025
 #
 # This Python script shows how to make basic REST API calls to an NSX
 # Manager Server.
@@ -18,9 +18,7 @@ import json
 import urllib.request
 from configparser import ConfigParser
 
-
 authorizationField = ''
-configname = 'config.ini'
 
 
 def nsxSetup(username, password):
@@ -61,8 +59,10 @@ def nsxGet(url):
    return(response.read().decode())
 
 
-
-# get the password for the vPod
+# set some variables
+configname = 'config.ini'
+home = '/home/holuser'
+creds = f'{home}/creds.txt'
 bad_sku = 'HOL-BADSKU'
 lab_sku = bad_sku
 configtmp = ConfigParser()
@@ -78,12 +78,12 @@ else:
 # Read the latest config.ini file to set globals
 config = ConfigParser()
 config.read(configini)
-if 'password' in config['VPOD'].keys():
-    pw = config.get('VPOD', 'password')
-else:
-    pw = 'VMware123!'
 
-nsxpw = f'{pw}{pw}'
+# set standard pw
+with open(creds, 'r') as c:
+    p = c.readline()
+    pw = p.strip()
+nsxpw = pw
 
 hostname = sys.argv[1]
 ip = sys.argv[2]
