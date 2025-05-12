@@ -928,6 +928,7 @@ Foreach ($ipTarget in $linuxMachines.keys) {  # BEGIN main loop for all Linux ch
 		Continue
 	}
 	#Write-Output "hostName: $hostName ipTarget: $ipTarget nsxV: $nsxV nsxT: $nsxT"
+<#
 	If ( ($hostName -Like "*nsx*") -Or ($hostName -Like "*csm*") -Or ($hostName -Like "*edge*") ) { # counting on this naming convention (need to do IP address checking
 		Write-Output "Attempting to check NSX accounts for password expiration and license status on $target..."
 		Invoke-Expression "python3 $PSSCriptRoot/checknsx.py `"$hostName`" $ipTarget > /tmp/output.txt"
@@ -959,6 +960,7 @@ Foreach ($ipTarget in $linuxMachines.keys) {  # BEGIN main loop for all Linux ch
 		$removeMachines += $ipTarget
 		Continue # nothing more to do with this one
 	}
+#>
 	
 	# Check Linux type with uname -a (need to identify special exceptions)
 	If ( $hostName -Like "*vcenter*" ) { 
