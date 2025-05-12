@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-# 10-May 2025
+# 12-May 2025
 #
 # This Python script shows how to make basic REST API calls to an NSX
 # Manager Server.
@@ -18,7 +18,9 @@ import json
 import urllib.request
 from configparser import ConfigParser
 
+
 authorizationField = ''
+configname = 'config.ini'
 
 
 def nsxSetup(username, password):
@@ -59,10 +61,8 @@ def nsxGet(url):
    return(response.read().decode())
 
 
-# set some variables
-configname = 'config.ini'
-home = '/home/holuser'
-creds = f'{home}/creds.txt'
+
+# get the password for the vPod
 bad_sku = 'HOL-BADSKU'
 lab_sku = bad_sku
 configtmp = ConfigParser()
@@ -78,12 +78,10 @@ else:
 # Read the latest config.ini file to set globals
 config = ConfigParser()
 config.read(configini)
-
-# set standard pw
+creds = f'{home}/creds.txt'
 with open(creds, 'r') as c:
     p = c.readline()
-    pw = p.strip()
-nsxpw = pw
+    nsxpw = p.strip()
 
 hostname = sys.argv[1]
 ip = sys.argv[2]
@@ -139,4 +137,4 @@ try:
                 # Using the "!" to delimit the expiration date for PowerShell
                 print(f'WARN~{target}~NSX licensing~{licdesc}:{expiry}')
 except Exception as e:
-    print(f'FAIL~{target}~NSX licensing~Cannot check password-expiration for {nsxuser}. {e}')
+    print(f'FAIL~{target}~NSX licensing~Cannot check license expiration for {hostname}. {e}')
