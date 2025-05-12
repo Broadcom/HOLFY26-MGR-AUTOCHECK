@@ -1,4 +1,4 @@
-# checkvsphere.ps1 version 1.2 28-May 2024
+# checkvsphere.ps1 version 1.3 12-May 2025
 
 # required in order to pass by reference
 $result = ""
@@ -387,11 +387,14 @@ If ( $vcPresent ) {
 "Management Storage policy - Thin" = "0"
 "VM Encryption Policy" = "0"
 "vSAN Default Storage Policy" = "2"
-"VVol No Requirements Policy" = "0"
+"vSAN ESA Default Policy - RAID5"  = "0"
+"vSAN ESA Default Policy - RAID6"  = "0"
 "vSAN Stretched ESA Default Policy - RAID5" = "0"
 "vSAN Stretched ESA Default Policy - RAID6" = "0"
-"cluster-mgmt-01a vSAN Storage Policy" = "0"
 "vSAN Stretched ESA Default Policy" = "0"
+"cluster-mgmt-01a vSAN Storage Policy" = "0"
+"cluster-wld01-01a vSAN Storage Policy" = "0"
+"VVol No Requirements Policy" = "0"
 }
 
 	$sPolicyCheck = "PASS"
@@ -419,7 +422,7 @@ If ( $vcPresent ) {
 }
 
 #37 DRS set to Partial or Off - not Full or Manual
-#38 vSphere HA Disabled (unless required for demo)
+#38 vSphere HA Disabled (unless required for demo) - updated standard 12-May 2025 HA enabled
 If ( $vcPresent ) { 
 	Write-Output "Checking vSphere cluster DRS and HA configurations..."
 	$allClusters = Get-Cluster -ErrorAction SilentlyContinue
@@ -427,7 +430,7 @@ If ( $vcPresent ) {
 Foreach ($cluster in $allClusters) {
 	#Write-Output $cluster.Name "HA: " $cluster.HAEnabled " DRS: " $cluster.DrsEnabled " DRS Automation Level: " $cluster.DrsAutomationLevel
 	If ( $cluster.HAEnabled ) {
-		Write-Logs "WARN" $cluster.Name "HA Status" "HA is enabled on $cluster."
+		Write-Logs "INFO" $cluster.Name "HA Status" "HA is enabled on $cluster."
 	} Else {
 		Write-Logs "PASS" $cluster.Name "HA Status" "HA is not enabled on $cluster."
 	}

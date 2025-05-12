@@ -1,5 +1,5 @@
-# AutoCheck.ps1 - 25-April 2025
-$version = "1.5.0"
+# AutoCheck.ps1 - 12-May 2025
+$version = "1.5.1"
 <#
 
 .SYNOPSIS			This script is intended to check VMware Hands-on Labs vPods.
@@ -333,7 +333,7 @@ If ( $WMC ) {
 }
 
 # copy the checkbrowsers.txt file to local then process. bug with Test-Path over NFS.
-Invoke-Expression "cp $mctmp/checkbrowsers.txt /tmp/checkbrowsers.txt"
+Invoke-Expression "cp $mcTmp/checkbrowsers.txt /tmp/checkbrowsers.txt"
 While ( -not ( Test-Path -Path "/tmp/checkbrowsers.txt" ) ) {
         Write-Output "Waiting for /tmp/checkbrowsers.txt..."
 	Start-Sleep -Seconds 5
@@ -343,8 +343,8 @@ ForEach ( $line in Get-Content -Path "/tmp/checkbrowsers.txt" ) {
 	$scratchFields = $line.Split('~')
 	Write-Logs $scratchFields[0] $scratchFields[1] $scratchFields[2] $scratchFields[3]
 }
-Remove-Item "$mctmp/checkbrowsers.ps1"
-Remove-Item "$mctmp/checkbrowsers.txt"
+#Remove-Item "$mctmp/checkbrowsers.ps1"
+#Remove-Item "$mctmp/checkbrowsers.txt"
 
 ##############################################################################
 ##### Check Browser Bookmarks against URLs.txt
@@ -534,6 +534,10 @@ Foreach ($vm in $allvms) {
 	If ( $name -Like "SupervisorControlPlaneVM*" ) { Continue}
 	If ( $name -Like "edge*mgmt*" ) { Continue}
 	If( $vm.GuestId -notmatch 'linux|ubuntu|debian|centos|sles|redhat|photon|rhel|other' ) { Continue }
+	If ($name -like '*auto-a*') { # VCF Auto is special
+		$name = 'auto-a'
+		$ipAddress = '10.1.1.70'
+	}
 	
 	$netAdapters = Get-NetworkAdapter -VM $vm
 	If ( -Not $netAdapters ) { # nothing we can check on this one
@@ -928,7 +932,6 @@ Foreach ($ipTarget in $linuxMachines.keys) {  # BEGIN main loop for all Linux ch
 		Continue
 	}
 	#Write-Output "hostName: $hostName ipTarget: $ipTarget nsxV: $nsxV nsxT: $nsxT"
-<#
 	If ( ($hostName -Like "*nsx*") -Or ($hostName -Like "*csm*") -Or ($hostName -Like "*edge*") ) { # counting on this naming convention (need to do IP address checking
 		Write-Output "Attempting to check NSX accounts for password expiration and license status on $target..."
 		Invoke-Expression "python3 $PSSCriptRoot/checknsx.py `"$hostName`" $ipTarget > /tmp/output.txt"
@@ -960,7 +963,6 @@ Foreach ($ipTarget in $linuxMachines.keys) {  # BEGIN main loop for all Linux ch
 		$removeMachines += $ipTarget
 		Continue # nothing more to do with this one
 	}
-#>
 	
 	# Check Linux type with uname -a (need to identify special exceptions)
 	If ( $hostName -Like "*vcenter*" ) { 

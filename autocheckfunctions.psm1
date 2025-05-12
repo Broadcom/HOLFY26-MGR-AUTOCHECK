@@ -186,13 +186,13 @@ Export-ModuleMember -Variable dnsForwarders
 
 # need to maintain vcVersion and build number hash from the base templates
 $vcVersion = @{
-"9.0.0" = "24678707"  # 2025 VCF base
+"9.0.0" = "24700475"  # 2025 VCF base RTM1
 }
 Export-ModuleMember -Variable vcVersion
 
 # need to maintain esxVersion and build number hash from the base templates
 $esxVersion = @{
-"9.0.0" = "24678710"  # 2025 VCF base
+"9.0.0" = "24700913"  # 2025 VCF base RTM1
 }
 Export-ModuleMember -Variable esxVersion
 

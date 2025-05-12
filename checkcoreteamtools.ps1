@@ -1,4 +1,4 @@
-# checkcoreteamtools.ps1 22-April 2025
+# checkcoreteamtools.ps1 12-May 2025
 
 # supported on Manager only
 # captains cannot change hol files in /home/holuser/hol
@@ -153,7 +153,8 @@ checkCTVersion $labStartup $labStartupDate
 checkCTVersion  $labStartupFunctions $labStartupFunctionsDate
 
 Write-Output "Checking $LabStartupFunctions for edits..."
-$refLabStartupFunctionsHash = "eba533006ea2ca2d41d52be9dde8e99b1f61b845a3e39f649ff92e7700c0405e"
+# as of RTM1 May 12, 2025
+$refLabStartupFunctionsHash = "9c0111028b3bc942a78650a28014cf249d28d008381e98c972ca8d66e0e0d571"
 $HashAlgorithm = 'SHA256' #one of the supported types: MD5, SHA1, SHA256, SHA384, SHA512
 $lsfHash = Get-FileHash -Path $labStartupFunctions -Algorithm $HashAlgorithm
 $lsFunctionsHash = $lsfHash.Hash.ToLower()

@@ -120,6 +120,10 @@ if sshaccess:
 
 print("\n") # need a line feed
 
+# cannot check licensing on an Edge
+if 'edge' in hostname:
+    exit(0)
+
 # check NSX license expiration
 try:
     nsxSetup(user,nsxpw)
