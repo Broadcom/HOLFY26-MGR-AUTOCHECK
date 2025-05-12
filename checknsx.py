@@ -107,7 +107,7 @@ if sshaccess:
     for nsxuser in nsxusers:
         cmd = f'get user {nsxuser} password-expiration'
         rh = f'{nsxuser}@{hostname}'
-        rcmd = f'/usr/bin/sshpass -p {pw} ssh {sshoptions} {rh} {cmd}'  # 2>&1
+        rcmd = f'/usr/bin/sshpass -p {nsxpw} ssh {sshoptions} {rh} {cmd}'  # 2>&1
         rcmdlist = rcmd.split()
         try:
             run = subprocess.run(rcmdlist, capture_output=True, text=True, check=True)
