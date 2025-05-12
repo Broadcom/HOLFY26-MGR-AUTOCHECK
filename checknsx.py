@@ -78,7 +78,7 @@ else:
 # Read the latest config.ini file to set globals
 config = ConfigParser()
 config.read(configini)
-creds = f'{home}/creds.txt'
+creds = '/home/holuser/creds.txt'
 with open(creds, 'r') as c:
     p = c.readline()
     nsxpw = p.strip()
