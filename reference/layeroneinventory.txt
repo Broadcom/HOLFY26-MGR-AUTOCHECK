@@ -1,0 +1,8 @@
+# edit as needed. set for LMC so change "main console" to windows if needed
+esx-01a, otherGuest64, 192.168.110.51
+esx-03a, otherGuest64, 192.168.110.53
+main console, Ubuntu Linux (64-bit), 192.168.110.10
+manager, Ubuntu Linux (64-bit), 192.168.110.11
+stgb-01a, freebsd64Guest, 10.10.20.60, 192.168.110.60
+vpodrouterhol, Debian GNU/Linux 10 (64 bit), 192.168.0.2
+vcsa-01a, other3xLinux64Guest, 192.168.110.22
